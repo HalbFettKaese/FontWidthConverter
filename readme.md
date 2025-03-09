@@ -70,6 +70,8 @@ factor:
     Path to root of fallback resource pack. Resources that don't exist in the target pack are looked up here instead.
 -u, --unihex_mode {none,ascii,all_named,all}:
     Decides which unihex characters will be included. Defaults to ascii.
+-w, --whitelist WHITELIST:
+    A string containing all the characters that should still included despite not being included in the unihex mode.
 -q, --quiet:
     Decides whether to show log messages.
 ```

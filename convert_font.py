@@ -45,6 +45,11 @@ class WidthConverter:
             choices=["none", "ascii", "all_named", "all"]
         )
         parser.add_argument(
+            "-w",
+            "--whitelist",
+            help="A string containing all the characters that should still included despite not being included in the unihex mode."
+        )
+        parser.add_argument(
             "-q",
             "--quiet",
             help="Decides whether to show log messages.",
@@ -59,6 +64,7 @@ class WidthConverter:
             args.target_pack_folder,
             args.fallback_pack_folder,
             args.unihex_mode,
+            args.whitelist,
             not args.quiet
         )
         
@@ -72,6 +78,7 @@ class WidthConverter:
                  target_pack_folder=None,
                  fallback_pack_folder=None,
                  unihex_mode=None,
+                 whitelist=None,
                  verbose=True):
         self.suffix = suffix
         
@@ -85,6 +92,11 @@ class WidthConverter:
         if unihex_mode is None:
             unihex_mode = "ascii"
         self.unihex_mode = unihex_mode
+        
+        if whitelist is None:
+            self.whitelist = ""
+        else:
+            self.whitelist = whitelist
         
         self.verbose = verbose
         
@@ -242,6 +254,21 @@ class WidthConverter:
                 return True
         return False
 
+    def include_unihex_character(self, code, overrides):
+        char = chr(code)
+        if self.unihex_mode == "all" or char in self.whitelist:
+            return True, None
+        if self.unihex_mode == "none":
+            return False, None
+        # All modes above "none" include ascii
+        if code < 256:
+            return True, None
+        if self.unihex_mode == "all_named":
+            for min_code, max_code, override_width in overrides:
+                if min_code <= code <= max_code:
+                    return True, override_width
+        return False, None
+    
     def convert_unihex_provider(self, old_provider):
         if self.unihex_mode == "none":
             return None
@@ -265,15 +292,10 @@ class WidthConverter:
         for line in hex.splitlines():
             code, img = line.split(":")
             code = int(code, 16)
-            if self.unihex_mode == "ascii" and code > 256:
+            include, width = self.include_unihex_character(code, overrides)
+            if not include:
                 continue
-            for min_code, max_code, override_width in overrides:
-                if min_code <= code <= max_code:
-                    width = override_width
-                    break
-            else:
-                if self.unihex_mode == "all_named" and code > 256:
-                    continue
+            if width is None:
                 width = self.read_hex_bitmap(img)
             advances[chr(code)] = (int(0.5 * width) + 1) * self.width_factor
         if len(advances)==0:

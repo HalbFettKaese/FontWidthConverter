@@ -1,6 +1,8 @@
 # Font Width Converter
 Converts any given Minecraft font into a new font that replaces each character with a space character that is as wide as the original character but multiplied by a given factor.
 
+The included fonts have been generated using the script's default settings, meaning that only the ascii characters are included from the default unihex characters.
+
 # How to use the font
 Replacing a text with the same width in space characters does not immediately seem useful, but there is a number of cases where such a font can be helpful.
 
